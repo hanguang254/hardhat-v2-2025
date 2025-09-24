@@ -29,6 +29,7 @@ module.exports = {
   etherscan: {
     apiKey: {
       xonetest: "dummy-api-key", // 有些链不校验 API Key，随便写
+      xonemain: "dummy-api-key"
     },
     customChains: [
       {
