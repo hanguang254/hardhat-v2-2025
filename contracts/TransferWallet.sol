@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.
@@ -164,30 +165,87 @@ abstract contract Ownable is Context {
     }
 }
 
-contract TranActive is Context,Ownable,ReentrancyGuard{
 
-    mapping (address => uint256) public depositquota;
+contract TransferWallet is Context,Ownable,ReentrancyGuard {
+
+    // #主币额度
+    mapping (address => uint256) public depositMainTokenQuota;
+
+    address public TokenAddress;
+
     event Withdraw(address,uint);
-    
-    function balanceOf()external view returns (uint256) {
+    event Deposit(address,uint);
+    event Transfer(address[] ,uint256[] );
+
+    // 设置token地址
+    function setTokenAddress(address tokenAddress) external onlyOwner {
+        TokenAddress = tokenAddress;
+    }
+    // 获取token余额
+    function TokenBalanceOf() public view returns (uint256) {
+        IERC20 token = IERC20(TokenAddress);
+        return token.balanceOf(address(this));
+    }
+    // 批量转账token
+    function transferToken(address[] memory recipients,uint256[] memory amounts) external onlyOwner  returns (bool) {
+        uint256 balance = TokenBalanceOf();
+        require(balance != 0,"Token balance is 0");
+        uint256 totalAmount = 0;
+        uint amountlength = amounts.length;
+        for (uint i= 0;i<amountlength;){
+            totalAmount += amounts[i];
+            unchecked{
+                i++;
+            }
+        }
+        require(totalAmount>0,"amount cant be 0");
+        _batchTransferToken(recipients, amounts);
+        return true;
+    }
+
+    // 转账方法
+    function _batchTransferToken(address[] memory recipients,uint256[] memory amounts) internal returns (bool){
+        require(recipients.length == amounts.length, "Number of recipients must be equal to the number of amounts.");
+        IERC20 token = IERC20(TokenAddress);
+        uint addresslength  = recipients.length;
+        for(uint i = 0 ;i<addresslength;){
+            bool success = token.transfer(recipients[i], amounts[i]);
+            require(success, "Token transfer failed");
+            unchecked{
+                i++;
+            }
+        }
+        emit Transfer(recipients,amounts);
+        return true;
+    }
+
+
+
+
+    function MainTokenBalanceOf()external view returns (uint256) {
         return address(this).balance;
     }
-    function getquota(address from) view internal returns(uint256){
-        return depositquota[from];
+
+    function getMainTokenQuota(address from) view internal returns(uint256){
+        return depositMainTokenQuota[from];
     }
 
-    function deposit() payable public  nonReentrant returns(address,uint256){
-        uint256 quota = getquota(_msgSender());
+    function depositMainToken() payable public  nonReentrant returns(address,uint256){
+        uint256 quota = getMainTokenQuota(_msgSender());
         if(quota == 0){
-            depositquota[_msgSender()] = msg.value;  
+            depositMainTokenQuota[_msgSender()] = msg.value;  
         }else {
-            depositquota[_msgSender()] = msg.value+quota; 
+            depositMainTokenQuota[_msgSender()] = msg.value+quota; 
         }
+        emit Deposit(_msgSender(),msg.value);
         return (_msgSender(),msg.value);
     }
 
-    function transfer(address[] memory recipients,uint256[] memory amounts) external  returns (bool) {
-        uint256 quota = getquota(_msgSender());
+
+
+
+    function transferMainToken(address[] memory recipients,uint256[] memory amounts) external  returns (bool) {
+        uint256 quota = getMainTokenQuota(_msgSender());
         require(quota != 0,"Not deposit amount");
         uint256 totalAmount = 0;
         uint amountlength = amounts.length;
@@ -198,12 +256,12 @@ contract TranActive is Context,Ownable,ReentrancyGuard{
             }
         }
         require(totalAmount<=quota,"Address Insufficient deposit amount");
-		depositquota[_msgSender()]=quota-totalAmount;
-        _batchTransfer(recipients, amounts);
+		depositMainTokenQuota[_msgSender()]=quota-totalAmount;
+        _batchTransferMainToken(recipients, amounts);
         return true;
     }
 
-    function _batchTransfer(address[] memory recipients,uint256[] memory amounts) internal returns (bool){
+    function _batchTransferMainToken(address[] memory recipients,uint256[] memory amounts) internal returns (bool){
         require(recipients.length == amounts.length, "Number of recipients must be equal to the number of amounts.");
         uint addresslength  = recipients.length;
         for(uint i = 0 ;i<addresslength;){
@@ -224,10 +282,10 @@ contract TranActive is Context,Ownable,ReentrancyGuard{
     }
 
     fallback() external payable {
-        deposit();
+        depositMainToken();
     }
 
     receive() external payable {
-        deposit();
+        depositMainToken();
     }
 }

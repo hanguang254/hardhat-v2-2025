@@ -6,6 +6,9 @@ module.exports = {
   solidity: {
     compilers: [
       {
+        version: "0.8.0", // 老合约用
+      },
+      {
         version: "0.8.18", // 老合约用
       },
       {
@@ -13,6 +16,7 @@ module.exports = {
       },
     ],
   },
+
   networks: {
     xonetest: {
       url: process.env.XONETEST_URL,
