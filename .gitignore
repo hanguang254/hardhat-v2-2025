@@ -15,3 +15,8 @@ node_modules
 
 # Hardhat Ignition default folder for deployments against a local node
 ignition/deployments/chain-31337
+contracts/donate/
+contracts/MockERC20.sol
+contracts/TestERC1155.sol
+contracts/TestXoneReward.sol
+contracts/TestXoneDonate.sol
