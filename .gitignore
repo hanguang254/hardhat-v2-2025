@@ -14,9 +14,15 @@ node_modules
 /coverage.json
 
 # Hardhat Ignition default folder for deployments against a local node
+ignition/deployments
+
 ignition/deployments/chain-31337
 contracts/donate/
 contracts/MockERC20.sol
 contracts/TestERC1155.sol
 contracts/TestXoneReward.sol
 contracts/TestXoneDonate.sol
+
+contracts/artifacts
+contracts/.states
+contracts/.deps
