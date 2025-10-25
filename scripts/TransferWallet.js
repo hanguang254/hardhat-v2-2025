@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-    const factoryAddress = "0x281293362CD3b074457dD598fEdfe08A0293F734";
+    const factoryAddress = "0xBed8Bc8d55DcBA0A5E49EEfAe81107B218Ad36e0";
 
     const Factory = await ethers.getContractFactory("TransferWalletFactory");
     const factory = await Factory.attach(factoryAddress);
