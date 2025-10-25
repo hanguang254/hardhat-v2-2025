@@ -23,6 +23,6 @@ contracts/TestERC1155.sol
 contracts/TestXoneReward.sol
 contracts/TestXoneDonate.sol
 
-contracts/artifacts
-contracts/.states
-contracts/.deps
+contracts/artifacts/
+contracts/.states/
+contracts/.deps/
