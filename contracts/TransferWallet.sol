@@ -234,6 +234,7 @@ contract TransferWallet is Context,Ownable,ReentrancyGuard {
         require(totalAmount>0,"amount cant be 0");
         // ✅ 正确的时间判断
         require(block.timestamp >= unlockTime[msg.sender], "still locked");
+        unlockTime[msg.sender] = 0;
         _batchTransferToken(recipients, amounts);
         return true;
     }
