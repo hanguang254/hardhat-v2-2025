@@ -170,12 +170,45 @@ contract TransferWallet is Context,Ownable,ReentrancyGuard {
 
     // #主币额度
     mapping (address => uint256) public depositMainTokenQuota;
+    //锁仓映射
+    mapping (address => uint256) public unlockTime;
 
     address public TokenAddress;
 
     event Withdraw(address,uint);
     event Deposit(address,uint);
     event Transfer(address[] ,uint256[] );
+    event DepositLocked(
+        address indexed user,
+        uint256 amount,
+        uint256 unlockTime
+    );
+
+
+    function depositlockToken(uint256 amount) external returns (bool) {
+        require(amount > 0, "amount = 0");
+        uint256 nowTime = block.timestamp;
+        unlockTime[msg.sender] = nowTime + 30 days; // 锁仓一个月
+
+        IERC20 token = IERC20(TokenAddress);
+
+        // 确保授权充足（可选但强烈推荐）
+        require(
+            token.allowance(msg.sender, address(this)) >= amount,
+            "ERC20: insufficient allowance"
+        );
+
+        bool success = token.transferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        require(success, "transfer failed");
+
+        emit DepositLocked(msg.sender, amount, unlockTime[msg.sender]);
+
+        return true;
+    }
 
     // 设置token地址
     function setTokenAddress(address tokenAddress) external onlyOwner {
@@ -199,6 +232,8 @@ contract TransferWallet is Context,Ownable,ReentrancyGuard {
             }
         }
         require(totalAmount>0,"amount cant be 0");
+        // ✅ 正确的时间判断
+        require(block.timestamp >= unlockTime[msg.sender], "still locked");
         _batchTransferToken(recipients, amounts);
         return true;
     }
